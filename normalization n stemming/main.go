@@ -44,13 +44,11 @@ func main() {
 
 func normalize(word string) string {
 	// удаление лишних символов
-	var cleanedWord strings.Builder
-	for _, r := range word {
-		if unicode.IsLetter(r) || r == '\'' { // оставляем только буквы и апострофы
-			cleanedWord.WriteRune(r)
-		}
+	f := func(r rune) bool {
+		return !unicode.IsLetter(r) && r != '\''
 	}
-	cleaned := cleanedWord.String()
+	fields := strings.FieldsFunc(word, f)
+	cleaned := strings.Join(fields, "")
 
 	// стемминг нормализованного слова
 	stemmed, err := snowball.Stem(cleanWord(cleaned), "english", true)
