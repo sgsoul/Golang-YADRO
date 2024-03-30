@@ -60,7 +60,7 @@ func normalize(word string) string {
 
 func cleanWord(word string) string {
 	// регулярное выражение для удаления глагольных окончаний
-	re := regexp.MustCompile(`'(ll|ve|re|s|d|m|t)\b`)
+	re := regexp.MustCompile(`(|n)'(ll|ve|re|s|d|m|t)\b`)
 	cleanedWord := re.ReplaceAllString(word, "")
 	return cleanedWord
 }
