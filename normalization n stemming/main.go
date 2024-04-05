@@ -26,7 +26,7 @@ func main() {
 	allWordsDeleted := true
 	// нормализация и вывод уникальных слов
 	for _, word := range words {
-		normalized := normalize(word)
+		normalized := Normalize(word)
 		if !seen[normalized] && !Stopwords[normalized] && !IsStopWord(word) {
 			fmt.Print(normalized, " ")
 			seen[normalized] = true
@@ -42,7 +42,7 @@ func main() {
 	}
 }
 
-func normalize(word string) string {
+func Normalize(word string) string {
 	// удаление лишних символов
 	f := func(r rune) bool {
 		return !unicode.IsLetter(r) && r != '\''
@@ -58,7 +58,7 @@ func normalize(word string) string {
 	return stemmed
 }
 
-func cleanWord(word string) string {
+func CleanWord(word string) string {
 	// регулярное выражение для удаления глагольных окончаний
 	re := regexp.MustCompile(`(|n)'(ll|ve|re|s|d|m|t)\b`)
 	cleanedWord := re.ReplaceAllString(word, "")
