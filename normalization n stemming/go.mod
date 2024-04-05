@@ -1,4 +1,4 @@
-module github.com/sgsoul/golang-YADRO
+module github.com/sgsoul/golangYADRO
 
 go 1.21.6
 
