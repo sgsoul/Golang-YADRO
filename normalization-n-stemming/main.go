@@ -51,7 +51,7 @@ func Normalize(word string) string {
 	cleaned := strings.Join(fields, "")
 
 	// стемминг нормализованного слова
-	stemmed, err := snowball.Stem(cleanWord(cleaned), "english", true)
+	stemmed, err := snowball.Stem(CleanWord(cleaned), "english", true)
 	if err != nil {
 		return cleaned
 	}
