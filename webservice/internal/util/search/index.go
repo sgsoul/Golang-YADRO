@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	log "github.com/rs/zerolog/log"
-	"github.com/sgsoul/pkg/database"
+	"github.com/sgsoul/internal/core/database"
 )
 
 func RelevantComic(relevantComics map[int]int, dbFile string) []database.Comic {
@@ -86,4 +86,14 @@ func BuildIndex(db map[string]database.Comic, indexFile string) error {
     log.Info().Msg("Index builded.")
 
 	return nil
+}
+
+func New(db map[string]database.Comic, indexFile string ) []byte{
+    BuildIndex(db, "index.json")
+	index, err := os.ReadFile(indexFile)
+	if err != nil {
+		log.Error().Err(err).Msg("error loading index fail")
+		return index
+	}
+    return index
 }

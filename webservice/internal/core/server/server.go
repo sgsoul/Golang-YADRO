@@ -5,13 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
+	"time"
 
-	"github.com/sgsoul/pkg/config"
-	"github.com/sgsoul/pkg/database"
-	sr "github.com/sgsoul/pkg/search"
-	"github.com/sgsoul/pkg/words"
-	"github.com/sgsoul/pkg/xkcd"
+	"github.com/jasonlvhit/gocron"
+	log "github.com/rs/zerolog/log"
+	"github.com/sgsoul/internal/config"
+	"github.com/sgsoul/internal/core/database"
+	"github.com/sgsoul/internal/adapters/xkcd"
+	"github.com/sgsoul/internal/util/words"
+	sr "github.com/sgsoul/internal/util/search"
 )
 
 
@@ -23,10 +25,7 @@ type Server struct {
 
 func NewServer(cfg *config.Config) (*Server, error) {
 	client := xkcd.NewClient(cfg.SourceURL)
-	db, _, err := database.LoadComicsFromFile(cfg.DBFile)
-	if err != nil {
-		return nil, fmt.Errorf("error loading comics from database file: %v", http.StatusInternalServerError)
-	}
+	db := database.New(cfg.DBFile)
 
 	return &Server{
 		client: client,
@@ -43,6 +42,9 @@ func (s *Server) Start() error {
 	fmt.Printf("Server listening on port %d\n", s.config.Port)
 	return http.ListenAndServe(port, nil)
 }
+
+//========================== get pics ===========================================================
+
 
 func (s *Server) handlePics(w http.ResponseWriter, r *http.Request) {
 	switch r.Method{
@@ -62,12 +64,7 @@ func (s *Server) getPics(w http.ResponseWriter, r *http.Request) {
 	
 	normalizedKeywords := words.NormalizeWords(searchString)
 
-	sr.BuildIndex(s.db, "index.json")
-	index, err := os.ReadFile(s.config.IndexFile)
-	if err != nil {
-		http.Error(w, "error loading index file", http.StatusInternalServerError)
-		return
-	}
+	index := sr.New(s.db, s.config.IndexFile)
 
 	relevantComics := sr.RelevantComic(sr.IndexSearch(index, normalizedKeywords), s.config.DBFile)
 
@@ -102,7 +99,7 @@ func (s *Server) getPics(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseBuffer.Bytes())
 }
 
-//=========================================================================================
+//========================== post update ========================================================
 
 
 func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
@@ -123,19 +120,11 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) updateDatabase() (interface{}, error) {
-	// количество загруженных комиксов до обновления
-	_, loadedComicsCountBefore, err := database.LoadComicsFromFile(s.config.DBFile)
-	if err != nil {
-		return nil, err
-	}
+	loadedComicsCountBefore := database.GetCount(s.config.DBFile)
 
 	s.client.RunWorkers(s.config.Parallel, s.config.DBFile)
 
-	// количество загруженных комиксов после обновления
-	_, loadedComicsCountAfter, err := database.LoadComicsFromFile(s.config.DBFile)
-	if err != nil {
-		return nil, err
-	}
+	loadedComicsCountAfter:= database.GetCount(s.config.DBFile)
 
 	updatedComicsCount := loadedComicsCountAfter - loadedComicsCountBefore
 
@@ -148,4 +137,38 @@ func (s *Server) updateDatabase() (interface{}, error) {
 	}
 
 	return response, nil
+}
+
+//=================================================================================
+
+func StartScheduler(hour int, min int) {
+	t := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), hour, min, 0, 0, time.FixedZone("UTC+3", 3*60*60))
+	gocron.Every(1).Hour().From(&t).Do(update)
+
+	<-gocron.Start()
+}
+
+func StartServer(cfg *config.Config) {
+	xkcdServer, err := NewServer(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("Error creating server")
+	}
+
+	if err := xkcdServer.Start(); err != nil {
+		log.Error().Err(err).Msg("Error starting server")
+	}
+}
+
+func update() {
+
+	log.Info().Msg("Sheduled database update")
+	cfg := config.New("config.yaml")
+
+	url := fmt.Sprintf("http://localhost:%d/update", cfg.Port)
+	resp, err := http.Post(url, "", nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Error executing request")
+		return
+	}
+	resp.Body.Close()
 }

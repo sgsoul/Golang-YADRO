@@ -2,8 +2,10 @@ package database
 
 import (
 	"encoding/json"
-	"os"
 	"fmt"
+	"os"
+
+	log "github.com/rs/zerolog/log"
 )
 
 type Comic struct {
@@ -81,4 +83,30 @@ func GetComic(dbFile string, id int) ([]Comic, error) {
 	}
 
 	return nil, fmt.Errorf("comic with ID %d not found", id)
+}
+
+func New(path string) map[string]Comic {
+	db, _, err := LoadComicsFromFile(path)
+	if err != nil {
+		log.Error().Err(err).Msg("probably u should just run ./xkcd first\nerror loading comics from database file")
+	}
+	return db
+}
+
+func GetCount(path string) int {
+	_, num, err := LoadComicsFromFile(path)
+	if err != nil {
+		log.Error().Err(err).Msg("error loading comics from database file")
+	}
+	return num
+}
+
+
+func OpenDB(dbFile string) {
+	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
+		if _, err := os.Create(dbFile); err != nil {
+			log.Error().Err(err).Msg("error creating the database")
+			return
+		}
+	}
 }

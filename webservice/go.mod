@@ -12,6 +12,5 @@ require (
 	github.com/jasonlvhit/gocron v0.0.1
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/robfig/cron v1.2.0
 	golang.org/x/sys v0.12.0 // indirect
 )

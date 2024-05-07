@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sgsoul/pkg/database"
-	sr "github.com/sgsoul/pkg/search"
-	"github.com/sgsoul/pkg/words"
+	"github.com/sgsoul/internal/core/database"
+	sr "github.com/sgsoul/internal/util/search"
+	"github.com/sgsoul/internal/util/words"
 )
 
 var testString = "hello from the other side"

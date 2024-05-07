@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sync"
 
-	db "github.com/sgsoul/pkg/database"
+	db "github.com/sgsoul/internal/core/database"
 	log "github.com/rs/zerolog/log"
-	"github.com/sgsoul/pkg/words"
+	"github.com/sgsoul/internal/util/words"
 )
 
 type Client struct {
@@ -109,17 +108,8 @@ func (c *Client) RunWorkers(workers int, dbFile string) {
 	go func() {
 		defer close(idChannel)
 		for i := 1; i <= latestComic; i++ {
-			if _, err := os.Stat(dbFile); os.IsNotExist(err) {
-				if _, err := os.Create(dbFile); err != nil {
-					log.Error().Err(err).Msg("error creating the database")
-					return
-				}
-			}
-			comicsMap, _, err := db.LoadComicsFromFile(dbFile)
-			if err != nil {
-				log.Error().Err(err).Msg("error loading comics from the database")
-				return
-			}
+			db.OpenDB(dbFile)
+			comicsMap := db.New(dbFile)
 			//проверка что комикс есть в дб
 			if _, ok := comicsMap[fmt.Sprintf("%d", i)]; !ok && i != 404 {
 				idChannel <- i // в канал загрузки

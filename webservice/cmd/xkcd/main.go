@@ -3,15 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 
-	_ "github.com/rs/zerolog"
 	log "github.com/rs/zerolog/log"
-	"github.com/sgsoul/pkg/config"
-	"github.com/sgsoul/pkg/database"
-	sr "github.com/sgsoul/pkg/search"
-	"github.com/sgsoul/pkg/words"
-	"github.com/sgsoul/pkg/xkcd"
+	"github.com/sgsoul/internal/config"
+	"github.com/sgsoul/internal/core/database"
+	sr "github.com/sgsoul/internal/util/search"
+	"github.com/sgsoul/internal/util/words"
+	"github.com/sgsoul/internal/adapters/xkcd"
 )
 
 func main() {
@@ -27,28 +25,15 @@ func main() {
 	flag.BoolVar(&useIndex, "i", false, "use index file for searching")
 	flag.Parse()
 
-	cfg, err := config.LoadConfig(configPath)
-	if err != nil {
-		log.Error().Err(err).Msg("error reading configuration fail")
-		return
-	}
+	cfg := config.New(configPath)
 
 	if searchString != "" {
-		db, _,  err := database.LoadComicsFromFile(cfg.DBFile)
-		if err != nil {
-			log.Error().Err(err).Msg("probably u should just run ./xkcd first\nerror loading comics from database file")
-		}
+		db := database.New(cfg.DBFile)
 
 		normalizedKeywords := words.NormalizeWords(searchString)
 
 		if useIndex {
-			sr.BuildIndex(db, "index.json")
-			index, err := os.ReadFile(cfg.IndexFile)
-			if err != nil {
-				log.Error().Err(err).Msg("error loading index fail")
-				return
-			}
-
+			index := sr.New(db, cfg.IndexFile)
 			// поиск комиксов по индексу
 			relevantComics = sr.RelevantComic(sr.IndexSearch(index, normalizedKeywords), cfg.DBFile)
 
@@ -69,7 +54,5 @@ func main() {
 	} else {
 		client := xkcd.NewClient(cfg.SourceURL)
 		client.RunWorkers(cfg.Parallel, cfg.DBFile)
-		log.Info().Msg("all comics saved")
 	}
 }
-

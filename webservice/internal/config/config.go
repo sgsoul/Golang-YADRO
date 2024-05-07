@@ -1,9 +1,9 @@
 package config
 
 import (
-	"os"
-	"gopkg.in/yaml.v2"
 	log "github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v2"
+	"os"
 )
 
 type Config struct {
@@ -32,3 +32,11 @@ func LoadConfig(configPath string) (*Config, error) {
 	return config, err
 }
 
+func New(configPath string) *Config {
+	cfg, err := LoadConfig(configPath)
+	if err != nil {
+		log.Error().Err(err).Msg("error reading configuration fail")
+		return nil
+	}
+	return cfg
+}

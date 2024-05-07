@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sgsoul/pkg/database"
-	"github.com/sgsoul/pkg/words"
+	"github.com/sgsoul/internal/core/database"
+	"github.com/sgsoul/internal/util/words"
 )
 
 // findRelevantComics находит наиболее релевантные комиксы к запросу
