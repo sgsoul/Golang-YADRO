@@ -83,5 +83,7 @@ func BuildIndex(db map[string]database.Comic, indexFile string) error {
 		return err
 	}
 
+    log.Info().Msg("Index builded.")
+
 	return nil
 }

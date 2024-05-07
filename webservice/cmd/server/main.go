@@ -1,9 +1,13 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"net/http"
+	"time"
 
-	//"github.com/jasonlvhit/gocron"
+
+	log "github.com/rs/zerolog/log"
+	"github.com/jasonlvhit/gocron"
 	"github.com/sgsoul/pkg/config"
 	"github.com/sgsoul/pkg/server"
 )
@@ -11,33 +15,46 @@ import (
 func main() {
 	cfg, err := config.LoadConfig("config.yaml")
 	if err != nil {
-		log.Fatalf("Error loading configuration: %v", err)
+		log.Error().Err(err).Msg("Error loading configuration")
 	}
 
-	// t := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 20, 38, 0, 0, time.FixedZone("UTC+3", 8*60*60))
-	// gocron.Every(1).Hour().From(&t).Do(update)
+	go startScheduler()
+	go startServer(cfg)
 
-	// <- gocron.Start()
+	select {}
+}
 
-	// fmt.Print("hhe")
+func startScheduler() {
+	t := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 19, 57, 0, 0, time.FixedZone("UTC+3", 3*60*60))
+	gocron.Every(1).Hour().From(&t).Do(update)
 
-	xkcdServer, _ := server.NewServer(cfg)
+	<-gocron.Start()
+}
+
+func startServer(cfg *config.Config) {
+	xkcdServer, err := server.NewServer(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("Error creating server")
+	}
+
 	if err := xkcdServer.Start(); err != nil {
-		log.Fatalf("Error starting server: %v", err)
+		log.Error().Err(err).Msg("Error starting server")
 	}
 }
 
-// func update() {
-// 	cfg, err := config.LoadConfig("config.yaml")
-// 	if err != nil {
-// 		log.Fatalf("Error loading configuration: %v", err)
-// 	}
+func update() {
 
-// 	url := fmt.Sprintf("http://localhost:%d/update", cfg.Port)
-// 		resp, err := http.Post(url, "", nil)
-// 		if err != nil {
-// 			log.Fatal("Ошибка при выполнении запроса:", err)
-// 			return
-// 		}
-// 		resp.Body.Close()
-// }
+	log.Info().Msg("Sheduled database update")
+	cfg, err := config.LoadConfig("config.yaml")
+	if err != nil {
+		log.Error().Err(err).Msg("Error loading configuration")
+	}
+
+	url := fmt.Sprintf("http://localhost:%d/update", cfg.Port)
+	resp, err := http.Post(url, "", nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Error executing request")
+		return
+	}
+	resp.Body.Close()
+}

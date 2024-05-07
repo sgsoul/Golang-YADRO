@@ -164,4 +164,6 @@ func (c *Client) RunWorkers(workers int, dbFile string) {
 
 	// ожидаем завершения работы
 	<-doneChannel
+
+	log.Info().Msg("Finish loading.")
 }

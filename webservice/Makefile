@@ -1,7 +1,7 @@
-# build:
-# 	go build -o xkcd ./cmd/xkcd
-
 build:
+	go build -o xkcd ./cmd/xkcd
+
+server:
 	go build -o server ./cmd/server
 
 bench:
