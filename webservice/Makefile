@@ -1,6 +1,3 @@
-build:
-	go build -o xkcd ./cmd/xkcd
-
 server:
 	go build -o server ./cmd/server
 
@@ -8,7 +5,7 @@ bench:
 	cd test/ && go test -bench=. -benchmem
 
 clean:
-	rm -f xkcd
+	rm -f server
 
 post:
 	curl -X POST 'http://localhost:8080/update'
