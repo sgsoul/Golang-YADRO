@@ -12,7 +12,7 @@ type Config struct {
 	Parallel  int    `yaml:"parallel"`
 	IndexFile string `yaml:"index_file"`
 	Port      int    `yaml:"port"`
-	DSN		  string `yaml:"dsn"`
+	DSN       string `yaml:"dsn"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

@@ -6,6 +6,7 @@ bench:
 
 clean:
 	rm -f server
+	rm index.json
 
 post:
 	curl -X POST 'http://localhost:8080/update'

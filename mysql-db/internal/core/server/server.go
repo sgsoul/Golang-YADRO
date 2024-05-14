@@ -24,10 +24,11 @@ type Server struct {
 
 func NewServer(cfg *config.Config) (*Server, error) {
 	client := xkcd.NewClient(cfg.SourceURL)
+	db := database.NewDB(cfg.DSN)
 
-	db, err := database.NewDB(cfg.DSN)
+	err := database.MigrateDatabase(cfg.DSN, "up")
 	if err != nil {
-		return nil, err
+		log.Error().Err(err).Msg("Error applying migrations")
 	}
 
 	return &Server{
@@ -90,7 +91,7 @@ func (s *Server) getPics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(urlJSON)
 
-	// Pretty output
+	// pretty output
 	var responseBuffer bytes.Buffer
 	for i, comic := range relevantComics {
 		if i >= 10 {
@@ -162,7 +163,7 @@ func update() {
 
 	log.Info().Msg("Scheduled database update")
 	cfg, err := config.LoadConfig("config.yaml")
-	if err != nil{
+	if err != nil {
 		log.Error().Msg("error")
 		return
 	}

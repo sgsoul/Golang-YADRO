@@ -5,7 +5,7 @@ import (
 	"os"
 	"sort"
 	"strings"
-    
+
 	log "github.com/rs/zerolog/log"
 	"github.com/sgsoul/internal/core/database"
 )
@@ -13,11 +13,11 @@ import (
 func RelevantComic(relevantComics map[int]int, db *database.DB) ([]database.Comic, error) {
 	var sortedComics []database.Comic
 
-    // слайс для сортировки
-    type kv struct {
-        Key   int
-        Value int
-    }
+	// слайс для сортировки
+	type kv struct {
+		Key   int
+		Value int
+	}
 
 	var sortedSlice []kv
 	for k, v := range relevantComics {
@@ -39,37 +39,37 @@ func RelevantComic(relevantComics map[int]int, db *database.DB) ([]database.Comi
 	return sortedComics, nil
 }
 
-func IndexSearch(file []byte, normalizedKeywords []string) (map[int]int) {
-    var index map[string][]int
-    err := json.Unmarshal(file, &index)
-    if err != nil {
-        log.Error().Err(err).Msg("error loading index fail")
-        return nil
-    }
+func IndexSearch(file []byte, normalizedKeywords []string) map[int]int {
+	var index map[string][]int
+	err := json.Unmarshal(file, &index)
+	if err != nil {
+		log.Error().Err(err).Msg("error loading index fail")
+		return nil
+	}
 
-    relevantComics := make(map[int]int)
-    for _, keyword := range normalizedKeywords {
-        if comics, ok := index[keyword]; ok {
-            for _, comic := range comics {
-                relevantComics[comic]++
-            }
-        }
-    }
+	relevantComics := make(map[int]int)
+	for _, keyword := range normalizedKeywords {
+		if comics, ok := index[keyword]; ok {
+			for _, comic := range comics {
+				relevantComics[comic]++
+			}
+		}
+	}
 
-    return relevantComics
+	return relevantComics
 }
 
 func BuildIndex(db *database.DB, indexFile string) error {
-    log.Info().Msg("Building index...")
+	log.Info().Msg("Building index...")
 
-    // Получаем комиксы из базы данных
+	// Получаем комиксы из базы данных
 	comics, err := db.GetAllComics()
 	if err != nil {
 		log.Error().Err(err).Msg("error getting comics from database")
-        return err
+		return err
 	}
 
-    // Создаем индекс
+	// Создаем индекс
 	index := make(map[string][]int)
 	for _, comic := range comics {
 		keywords := strings.Split(comic.Keywords, ",")
@@ -78,27 +78,26 @@ func BuildIndex(db *database.DB, indexFile string) error {
 		}
 	}
 
-    // Создаем файл индекса
+	// Создаем файл индекса
 	file, err := os.Create(indexFile)
 	if err != nil {
 		log.Error().Err(err).Msg("error creating index file")
-        return err
+		return err
 	}
 	defer file.Close()
 
-    // Кодируем данные в формат JSON и записываем их в файл
+	// Кодируем данные в формат JSON и записываем их в файл
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "    ")
 	if err := encoder.Encode(index); err != nil {
 		log.Error().Err(err).Msg("error encoding index to JSON")
-        return err
+		return err
 	}
 
-    log.Info().Msg("Index built successfully.")
+	log.Info().Msg("Index built successfully.")
 
 	return nil
 }
-
 
 func New(db *database.DB, indexFile string) []byte {
 	BuildIndex(db, "index.json")
@@ -107,6 +106,5 @@ func New(db *database.DB, indexFile string) []byte {
 		log.Error().Err(err).Msg("error loading index fail")
 		return index
 	}
-    return index
+	return index
 }
-
