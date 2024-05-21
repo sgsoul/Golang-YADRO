@@ -1,0 +1,9 @@
+source_url: https://xkcd.com
+db_file: database.json
+parallel: 42
+index_file: index.json
+port: 8080
+dsn: "user:qwerty@tcp(localhost:3306)/xkcd"
+token_max_time: 60
+concurrency_limit: 5
+rate_limit: 2
