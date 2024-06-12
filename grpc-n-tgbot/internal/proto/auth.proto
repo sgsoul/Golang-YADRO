@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "internal/proto";
+
+service AuthService {
+  rpc GenerateJWT (GenerateJWTRequest) returns (GenerateJWTResponse);
+  rpc ValidateJWT (ValidateJWTRequest) returns (ValidateJWTResponse);
+}
+
+message GenerateJWTRequest {
+  string username = 1;
+  string role = 2;
+  int32 expiryMinutes = 3;
+}
+
+message GenerateJWTResponse {
+  string token = 1;
+}
+
+message ValidateJWTRequest {
+  string token = 1;
+}
+
+message ValidateJWTResponse {
+  bool valid = 1;
+  string username = 2;
+  string role = 3;
+}
